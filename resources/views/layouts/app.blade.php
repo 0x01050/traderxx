@@ -30,6 +30,6 @@
             @yield('content')
         </div>
         @yield('scripts')
-        <script src="{{ url('/js/app.js?20201201') }}"></script>
+        <script src="{{ url('/js/app.js?202012011') }}"></script>
     </body>
 </html>
