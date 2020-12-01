@@ -28,12 +28,13 @@ Route::group(['middleware' => ['auth']], function () {
     Route::get('/edit-user/{id}', 'HomeController@editClient');
     Route::get('/delete-user/{id}', 'HomeController@deleteClient');
 
-	Route::get('/get-status-info', 'HomeController@getStatusInfo');
 
-	Route::get('/parameter', 'ParameterController@index')->name('parameter');
-    Route::post('/get-parameters', 'ParameterController@getParameters');
 
     Route::group(['middleware' => ['admin']], function () {
+        Route::get('/get-status-info', 'HomeController@getStatusInfo');
+
+        Route::get('/parameter', 'ParameterController@index')->name('parameter');
+        Route::post('/get-parameters', 'ParameterController@getParameters');
         Route::get('/add-parameter', 'ParameterController@addParameter');
         Route::post('/create-parameter', 'ParameterController@createParameter');
         Route::post('/update-parameter', 'ParameterController@updateParameter');

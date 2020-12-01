@@ -272,9 +272,10 @@ class HomeController extends Controller
     {
         $user = auth()->user();
 
-        $result = $this->client->where('id', $id)->first();
+        $result = $this->client->where('id', $id)->get();
+        $result = $this->clientPresenter->transformCollection($result)[0];
 
-        if($user->type != 'administrator' && $result->created_by != $user->id) {
+        if($user->type != 'administrator' && $result['created_by'] != $user->id) {
             return redirect('/home');
         }
 
