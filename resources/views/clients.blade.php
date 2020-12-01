@@ -4,9 +4,11 @@
 
 @section('content')
     <div class="div-root">
-        <page-menu v-bind:page="'Home'" v-bind:is-admin="'{{ auth()->user()->type == 'administrator' }}'"></page-menu>
+        <page-menu v-bind:page="'Home'" v-bind:is-admin="'{{ auth()->user()->type == 'administrator' ? true : false }}'"></page-menu>
         <section>
-            <status-info></status-info>
+            @if(auth()->user()->type == 'administrator')
+                <status-info></status-info>
+            @endif
             <clients></clients>
         </section>
     </div>

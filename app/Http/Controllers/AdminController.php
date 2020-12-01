@@ -218,6 +218,7 @@ class AdminController extends Controller
     {
         $this->user->where('id', $id)->delete();
         DB::table('param_group')->where('user_id', $id)->delete();
+        DB::table('clients')->where('created_by', $id)->delete();
         return redirect('/admin');
 
     }
