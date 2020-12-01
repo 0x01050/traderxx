@@ -11,9 +11,9 @@
         @yield('meta')
 
         <!-- stylesheets -->
-        <link href="{{ url('/css/app.css') }}" rel=stylesheet >
-        @yield('styles')  
-        
+        <link href="{{ url('/css/app.css?20201201') }}" rel=stylesheet >
+        @yield('styles')
+
         <script>
             var URL = {
                 'base' : '{{ url('/') }}',
@@ -25,11 +25,11 @@
         </script>
     </head>
     <body>
-        <div id="app">   
+        <div id="app">
             <page-header v-bind:name="'{{ Auth::user()->name }}'"></page-header>
             @yield('content')
         </div>
         @yield('scripts')
-        <script src="{{ url('/js/app.js') }}"></script>
+        <script src="{{ url('/js/app.js?20201201') }}"></script>
     </body>
 </html>

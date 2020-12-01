@@ -82,7 +82,7 @@ class ParameterController extends Controller
             case 'stop_loss':
                 $query->orderBy('stop_loss', $orderByDesc);
                 break;
-            
+
         }
 
         $paginator = $query->paginate($limit, ['*'], 'page', $page);
@@ -91,7 +91,7 @@ class ParameterController extends Controller
         $paginatorJson = json_decode($paginator->toJson());
 
         return response([
-                    'count'         => $paginatorJson->total, 
+                    'count'         => $paginatorJson->total,
                     'offset'        => $offset,
                     'limit'         => $limit,
                     'orderBy'       => $request->orderby,
@@ -105,8 +105,8 @@ class ParameterController extends Controller
         return view('parameter-create');
     }
 
-    public function createParameter(Request $request) 
-    { 
+    public function createParameter(Request $request)
+    {
         $validator = Validator::make($request->all(), [
             'name'          				=> 'required',
             'connection_interval'         	=> 'required|min:5|integer',
@@ -132,17 +132,17 @@ class ParameterController extends Controller
 
             $this->parameter->create([
                 'name'              				=> $request->name,
-                'connection_interval'             	=> $request->connection_interval, 
+                'connection_interval'             	=> $request->connection_interval,
                 'vol_min'               			=> $request->vol_min,
                 'vol_bin_size'        				=> $request->vol_bin_size,
-                'vol_count'           				=> $request->vol_count,            
+                'vol_count'           				=> $request->vol_count,
                 'limit_profit'       				=> $request->limit_profit,
                 'order_count'      					=> $request->order_count,
                 'order_distance'       				=> $request->order_distance,
                 'qty_rate'            				=> $request->qty_rate,
                 'stop_loss'            				=> $request->stop_loss
             ]);
-            
+
             DB::commit();
         }
         catch (\Exception $e) {
@@ -163,8 +163,8 @@ class ParameterController extends Controller
         return view('parameter-edit', compact('param'));
     }
 
-    public function updateParameter(Request $request) 
-    { 
+    public function updateParameter(Request $request)
+    {
         if(isset($request->id))
             $parameter = $this->parameter->where('id', $request->id)->first();
 
@@ -194,17 +194,17 @@ class ParameterController extends Controller
 
             $parameter->update([
                 'name'              				=> $request->name,
-                'connection_interval'             	=> $request->connection_interval, 
+                'connection_interval'             	=> $request->connection_interval,
                 'vol_min'               			=> $request->vol_min,
                 'vol_bin_size'        				=> $request->vol_bin_size,
-                'vol_count'           				=> $request->vol_count,            
+                'vol_count'           				=> $request->vol_count,
                 'limit_profit'       				=> $request->limit_profit,
                 'order_count'      					=> $request->order_count,
                 'order_distance'       				=> $request->order_distance,
                 'qty_rate'            				=> $request->qty_rate,
                 'stop_loss'            				=> $request->stop_loss
             ]);
-            
+
             DB::commit();
         }
         catch (\Exception $e) {
@@ -218,9 +218,10 @@ class ParameterController extends Controller
 
     }
 
-    public function deleteParameter($id) 
-    { 
-        $result = $this->parameter->where('id', $id)->delete();
+    public function deleteParameter($id)
+    {
+        $this->parameter->where('id', $id)->delete();
+        DB::table('param_group')->where('param_id', $id)->delete();
         return redirect('/parameter');
 
     }

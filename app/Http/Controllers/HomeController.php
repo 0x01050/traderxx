@@ -46,13 +46,20 @@ class HomeController extends Controller
         $query = $this->client->select('clients.*')
                             ->selectSub('parameters.name', 'parameterName')
                             ->leftJoin('parameters', 'clients.parameter_id', '=', 'parameters.id')
-                            ->where('clients.name', 'LIKE', '%'.$key.'%')
-                            ->orWhere('email', 'LIKE', '%'.$key.'%')
-                            ->orWhere('license', 'LIKE', '%'.$key.'%')
-                            ->orWhere('api', 'LIKE', '%'.$key.'%')
-                            ->orWhere('secret_key', 'LIKE', '%'.$key.'%')
-                            ->orWhere('parameters.name', 'LIKE', '%'.$key.'%')
-                            ->orWhere('remark', 'LIKE', '%'.$key.'%');
+                            ->where(function($query) use ($key) {
+                                $query->where('clients.name', 'LIKE', '%'.$key.'%')
+                                    ->orWhere('email', 'LIKE', '%'.$key.'%')
+                                    ->orWhere('license', 'LIKE', '%'.$key.'%')
+                                    ->orWhere('api', 'LIKE', '%'.$key.'%')
+                                    ->orWhere('secret_key', 'LIKE', '%'.$key.'%')
+                                    ->orWhere('parameters.name', 'LIKE', '%'.$key.'%')
+                                    ->orWhere('remark', 'LIKE', '%'.$key.'%');
+                            });
+
+        $user = auth()->user();
+        if($user->type != 'administrator') {
+            $query = $query->where('clients.created_by', $user->id);
+        }
 
         switch ($request->orderby) {
 
@@ -91,7 +98,7 @@ class HomeController extends Controller
             case 'status':
                 $query->orderBy('status', $orderByDesc);
                 break;
-            
+
         }
 
         $paginator = $query->paginate($limit, ['*'], 'page', $page);
@@ -100,7 +107,7 @@ class HomeController extends Controller
         $paginatorJson = json_decode($paginator->toJson());
 
         return response([
-                    'count'         => $paginatorJson->total, 
+                    'count'         => $paginatorJson->total,
                     'offset'        => $offset,
                     'limit'         => $limit,
                     'orderBy'       => $request->orderby,
@@ -111,13 +118,21 @@ class HomeController extends Controller
 
     public function addClient()
     {
-        $result = $this->parameter->get();
+        $user = auth()->user();
+        if($user->type == 'administrator') {
+            $result = $this->parameter->get();
+        } else {
+            $result = $this->parameter->select('parameters.*')
+                                    ->leftJoin('param_group', 'param_group.param_id', '=', 'parameters.id')
+                                    ->where('param_group.user_id', $user->id)
+                                    ->get();
+        }
         $parameterList = json_encode($this->parameterPresenter->transformCollection($result));
         return view('client-create', compact('parameterList'));
     }
 
-    public function createClient(Request $request) 
-    { 
+    public function createClient(Request $request)
+    {
         $validator = Validator::make($request->all(), [
             'name' => 'required|min:3',
             'email' => 'required|email|max:255',
@@ -137,22 +152,25 @@ class HomeController extends Controller
                         ->withInput();
         }
 
+        $user = auth()->user();
+
         try {
             DB::beginTransaction();
 
             $this->client->create([
                 'name'              => $request->name,
-                'email'             => $request->email, 
+                'email'             => $request->email,
                 'api'               => $request->api,
                 'secret_key'        => $request->secret_key,
-                'license'           => $request->license,            
+                'license'           => $request->license,
                 'expire_date'       => date('Y-m-d', strtotime($request->expire_date)),
                 'parameter_id'      => $request->parameter,
                 'balance_max'       => $request->balance_max,
                 'status'            => $request->status,
-                'remark'            => $request->remark
+                'remark'            => $request->remark,
+                'created_by'        => $user->type == 'administrator' ? 0 : $user->id
             ]);
-            
+
             DB::commit();
         }
         catch (\Exception $e) {
@@ -168,18 +186,38 @@ class HomeController extends Controller
 
     public function editClient($id)
     {
-        $result = $this->client->where('id', $id)->get();
-        $param = json_encode($this->clientPresenter->transformCollection($result)[0]);
+        $user = auth()->user();
 
+        $result = $this->client->where('id', $id)->get();
+        $param = $this->clientPresenter->transformCollection($result)[0];
+        if($user->type != 'administrator' && $param['created_by'] != $user->id) {
+            return redirect('/home');
+        }
+        $param = json_encode($param);
+
+        if($user->type == 'administrator') {
+            $result = $this->parameter->get();
+        } else {
+            $result = $this->parameter->select('parameters.*')
+                                    ->leftJoin('param_group', 'param_group.param_id', '=', 'parameters.id')
+                                    ->where('param_group.user_id', $user->id)
+                                    ->get();
+        }
         $result = $this->parameter->get();
         $parameterList = json_encode($this->parameterPresenter->transformCollection($result));
         return view('client-edit', compact('param','parameterList'));
     }
 
-    public function updateClient(Request $request) 
-    { 
+    public function updateClient(Request $request)
+    {
+        $user = auth()->user();
+
         if(isset($request->id))
             $client = $this->client->where('id', $request->id)->first();
+
+        if($user->type != 'administrator' && $client->created_by != $user->id) {
+            return redirect('/home');
+        }
 
         $validator = Validator::make($request->all(), [
             'id'            => 'required',
@@ -206,17 +244,17 @@ class HomeController extends Controller
 
             $client->update([
                 'name'              => $request->name,
-                'email'             => $request->email, 
+                'email'             => $request->email,
                 'api'               => $request->api,
                 'secret_key'        => $request->secret_key,
-                'license'           => $request->license,            
+                'license'           => $request->license,
                 'expire_date'       => date('Y-m-d', strtotime($request->expire_date)),
                 'parameter_id'      => $request->parameter,
                 'balance_max'       => $request->balance_max,
                 'status'            => $request->status,
                 'remark'            => $request->remark
             ]);
-            
+
             DB::commit();
         }
         catch (\Exception $e) {
@@ -230,8 +268,16 @@ class HomeController extends Controller
 
     }
 
-    public function deleteClient($id) 
-    { 
+    public function deleteClient($id)
+    {
+        $user = auth()->user();
+
+        $result = $this->client->where('id', $id)->first();
+
+        if($user->type != 'administrator' && $result->created_by != $user->id) {
+            return redirect('/home');
+        }
+
         $result = $this->client->where('id', $id)->delete();
         return redirect('/home');
 

@@ -20,8 +20,8 @@ Route::get('/', function () {
 });
 
 Route::group(['middleware' => ['auth']], function () {
-	Route::get('/home', 'HomeController@index')->name('home');	
-	Route::get('/add-user', 'HomeController@addClient');	
+	Route::get('/home', 'HomeController@index')->name('home');
+	Route::get('/add-user', 'HomeController@addClient');
 	Route::post('/get-clients', 'HomeController@getClients');
 	Route::post('/create-client', 'HomeController@createClient');
     Route::post('/update-client', 'HomeController@updateClient');
@@ -30,11 +30,23 @@ Route::group(['middleware' => ['auth']], function () {
 
 	Route::get('/get-status-info', 'HomeController@getStatusInfo');
 
-	Route::get('/parameter', 'ParameterController@index')->name('parameter');	
-	Route::post('/get-parameters', 'ParameterController@getParameters');
-	Route::get('/add-parameter', 'ParameterController@addParameter');
-	Route::post('/create-parameter', 'ParameterController@createParameter');
-    Route::post('/update-parameter', 'ParameterController@updateParameter');
-    Route::get('/edit-parameter/{id}', 'ParameterController@editParameter');
-    Route::get('/delete-parameter/{id}', 'ParameterController@deleteParameter');
+	Route::get('/parameter', 'ParameterController@index')->name('parameter');
+    Route::post('/get-parameters', 'ParameterController@getParameters');
+
+    Route::group(['middleware' => ['admin']], function () {
+        Route::get('/add-parameter', 'ParameterController@addParameter');
+        Route::post('/create-parameter', 'ParameterController@createParameter');
+        Route::post('/update-parameter', 'ParameterController@updateParameter');
+        Route::get('/edit-parameter/{id}', 'ParameterController@editParameter');
+        Route::get('/delete-parameter/{id}', 'ParameterController@deleteParameter');
+
+        Route::get('/admin', 'AdminController@index')->name('admin');
+        Route::get('/add-admin', 'AdminController@addAdmin');
+        Route::post('/get-admins', 'AdminController@getAdmins');
+        Route::post('/create-admin', 'AdminController@createAdmin');
+        Route::post('/update-admin', 'AdminController@updateAdmin');
+        Route::get('/edit-admin/{id}', 'AdminController@editAdmin');
+        Route::get('/delete-admin/{id}', 'AdminController@deleteAdmin');
+    });
+
 });
