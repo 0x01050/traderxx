@@ -203,7 +203,14 @@ class HomeController extends Controller
                                     ->where('param_group.user_id', $user->id)
                                     ->get();
         }
-        $result = $this->parameter->get();
+        if($user->type == 'administrator') {
+            $result = $this->parameter->get();
+        } else {
+            $result = $this->parameter->select('parameters.*')
+                                    ->leftJoin('param_group', 'param_group.param_id', '=', 'parameters.id')
+                                    ->where('param_group.user_id', $user->id)
+                                    ->get();
+        }
         $parameterList = json_encode($this->parameterPresenter->transformCollection($result));
         return view('client-edit', compact('param','parameterList'));
     }
