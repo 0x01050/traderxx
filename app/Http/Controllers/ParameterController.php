@@ -83,6 +83,21 @@ class ParameterController extends Controller
                 $query->orderBy('stop_loss', $orderByDesc);
                 break;
 
+            case 'force_stop':
+                $query->orderBy('force_stop', $orderByDesc);
+                break;
+
+            case 'martingale':
+                $query->orderBy('martingale', $orderByDesc);
+                break;
+
+            case 'inverse':
+                $query->orderBy('inverse', $orderByDesc);
+                break;
+
+            case 'direction':
+                $query->orderBy('direction', $orderByDesc);
+                break;
         }
 
         $paginator = $query->paginate($limit, ['*'], 'page', $page);
@@ -112,12 +127,16 @@ class ParameterController extends Controller
             'connection_interval'         	=> 'required|min:5|integer',
             'vol_min'         				=> 'required|min:1|integer',
             'vol_bin_size'         			=> 'required',
-            'vol_count'         			=> 'required|min:1|integer',
+            'vol_count'         			=> 'required|min:1|max:1000|integer',
             'limit_profit'         			=> 'required|min:1|integer',
             'order_count'         			=> 'required|min:0|integer',
             'order_distance'         		=> 'required|min:1|integer',
             'qty_rate'         				=> 'required|max:1|numeric',
-            'stop_loss'         			=> 'required|min:1|integer'
+            'stop_loss'         			=> 'required|min:0|integer',
+            'force_stop'                    => 'required|integer',
+            'martingale'                    => 'required|numeric',
+            'inverse'                       => 'required|integer',
+            'direction'                     => 'required|integer'
         ]);
 
 
@@ -140,7 +159,11 @@ class ParameterController extends Controller
                 'order_count'      					=> $request->order_count,
                 'order_distance'       				=> $request->order_distance,
                 'qty_rate'            				=> $request->qty_rate,
-                'stop_loss'            				=> $request->stop_loss
+                'stop_loss'            				=> $request->stop_loss,
+                'force_stop'                        => $request->force_stop,
+                'martingale'                        => $request->martingale,
+                'inverse'                           => $request->inverse,
+                'direction'                         => $request->direction
             ]);
 
             DB::commit();
@@ -174,12 +197,16 @@ class ParameterController extends Controller
             'connection_interval'         	=> 'required|min:5|integer',
             'vol_min'         				=> 'required|min:1|integer',
             'vol_bin_size'         			=> 'required',
-            'vol_count'         			=> 'required|min:1|integer',
+            'vol_count'         			=> 'required|min:1|max:1000|integer',
             'limit_profit'         			=> 'required|min:1|integer',
             'order_count'         			=> 'required|min:0|integer',
             'order_distance'         		=> 'required|min:1|integer',
             'qty_rate'         				=> 'required|max:1|numeric',
-            'stop_loss'         			=> 'required|min:1|integer'
+            'stop_loss'         			=> 'required|min:0|integer',
+            'force_stop'                    => 'required|integer',
+            'martingale'                    => 'required|numeric',
+            'inverse'                       => 'required|integer',
+            'direction'                     => 'required|integer'
         ]);
 
 
@@ -202,7 +229,11 @@ class ParameterController extends Controller
                 'order_count'      					=> $request->order_count,
                 'order_distance'       				=> $request->order_distance,
                 'qty_rate'            				=> $request->qty_rate,
-                'stop_loss'            				=> $request->stop_loss
+                'stop_loss'            				=> $request->stop_loss,
+                'force_stop'                        => $request->force_stop,
+                'martingale'                        => $request->martingale,
+                'inverse'                           => $request->inverse,
+                'direction'                         => $request->direction
             ]);
 
             DB::commit();
@@ -220,7 +251,7 @@ class ParameterController extends Controller
 
     public function deleteParameter($id)
     {
-        $this->parameter->where('id', $id)->delete();
+        $result = $this->parameter->where('id', $id)->delete();
         DB::table('param_group')->where('param_id', $id)->delete();
         return redirect('/parameter');
 
